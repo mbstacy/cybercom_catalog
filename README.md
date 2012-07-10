@@ -1,4 +1,4 @@
 cybercom_catalog
 ================
 
-Cybercommons Catalog
+Cybercommons Catalog - mongoDB version
