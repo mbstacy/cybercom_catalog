@@ -13,11 +13,13 @@ class mongo_catalog():
         self.dbcon = Connection(config.get('database','host'))
         self.dbcon.read_preference = ReadPreference.SECONDARY
     def getdatabase(self,username="guest", **kwargs):
-        #return self.dbcon.database_names()
+        #returns authorized databases
         return self.user_authDB(username)
     def getcollections(self,database):
+        #returns collections associated with database 
         return self.dbcon[database].collection_names()
     def getInfo(self,db,collection,query=None,skip=0,limit=0):
+        #get page information for query
         info = {}
         if query:
             query = ast.literal_eval(query)
@@ -33,21 +35,22 @@ class mongo_catalog():
         info['totalCollection']=self.dbcon[db][collection].find().count()
         return info
     def getDoc(self,db,collection,query=None,skip=0,limit=0):
-        #return self.db.collection_names()
+        #returns data in monogDB cursor
         if query:
             query = ast.literal_eval(query)
             cur = self.dbcon[db][collection].find(**query).skip(skip).limit(limit)
         else:
             cur = self.dbcon[db][collection].find().skip(skip).limit(limit).sort([('_id',1)])
-        return cur #self.db[collection].find(query,fields)        
+        return cur         
     def save(self,db,collection,document):
         return "Save turned off while no auth in place for MongoDB"
         if document['_id']:
             document['_id']=ObjectId(document['_id'])
         return self.dbcon[db][collection].save(document)
     def getkeys(self,database,collection,popID=True):
-        col=database + "." + collection  #+ ".Keys"
-        cur = self.dbcon['mongoSchema'][col].find({'value.type':{'$nin':['function','object']}})#{'$ne':'function'}})
+        #Returns Information regarding keys from database and collection
+        col=database + "." + collection  
+        cur = self.dbcon['mongoSchema'][col].find({'value.type':{'$nin':['function','object']}})
         cur1= self.dbcon['mongoSchema'][col].find({'value.type':{'$nin':['function']}})
         out=[]
         for row in cur:
@@ -61,17 +64,15 @@ class mongo_catalog():
         cols.sort()
         return out,cols
     def getIndexes(self,database,collection):
-            return self.dbcon[database][collection].index_information()
+        #Resturns Index information for database and collection    
+        return self.dbcon[database][collection].index_information()
     def getID_timestamp(self,id,type='iso_string'):
+        #returns generated document timestamp from ObjectID
         if type == 'iso_string':
             try:
                 return str(ObjectId(id).generation_time)
             except:
                 return str(id.generation_time)
-    def seqNext(self,sequence,collection='sequences'):
-        #result = self.db.runCommand( { "findandmodify" : collection,"query" : { "name" :sequence},"update" : { $inc : { "id" : 1 }},"new" : true } ) 
-        result=self.db.command("findandmodify", collection, query={"name":sequence}, update={"$inc":{"id":1}}, new=1)
-        return result['value']['id']       
     def newCommons(self,commons, owner):
         #need to check for already existing Names
         try:
@@ -89,7 +90,7 @@ class mongo_catalog():
         rec['commons'].append({ "database" : commons, "permission" : "rwa" } )
         self.dbcon.cybercom_auth.commons_priviledges.save(rec)
         
-        return True #self.dbcon.cybercom_auth.commons_priviledges.insert({ "_id" :usr['_id'], "user" : usr['user'], "commons" : [ { "database" : commons, "permission" : "rwa" } ] })
+        return True
         
     def user_authDB(self,username):
         '''returns list of databases that username has authority to see'''
@@ -98,28 +99,10 @@ class mongo_catalog():
         except:
             userid=-999
         output=[]
-        dbs = self.dbcon.cybercom_auth.commons_priviledges.find({'$or':[{'_id':userid},{'user':username}]},['commons'])#.database_names()
-        #if dbs.count()== 0:
-        #    dbs = self.dbcon.cybercom_auth.commons_priviledges.find({'_id':int(username)},['commons'])
-        #    output.append(username)
-        #output=[]
+        dbs = self.dbcon.cybercom_auth.commons_priviledges.find({'$or':[{'_id':userid},{'user':username}]},['commons'])
         if dbs.count()== 0:
             return output
         for db in dbs[0]['commons']:
             output.append(db['database'])
-        #Remove system admin databases
-        #dbs.remove('mongoSchema')
-        #dbs.remove('admin')
-        #dbs.remove('local')
-        #dbs.remove('cybercom_auth')
-        #run admin to check for administrator privelage
-        #result= self.dbcon.admin.system.users.find({'user':username})
-        #if result.count()==1:
-        #    return dbs
-        #output=[]
-        #for cdb in dbs:
-        #    result= self.dbcon[cdb].system.users.find({'user':username})
-        #    if result.count()==1:
-        #        output.append(cdb)
         return output
                 
