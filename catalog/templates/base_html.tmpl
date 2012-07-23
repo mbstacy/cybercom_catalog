@@ -1,0 +1,72 @@
+#compiler-settings
+cheetahVarStartToken = @
+#end compiler-settings
+<!DOCTYPE html>
+<html>
+<head>
+<title>Cybercommons temp folder Catalog</title>
+<!--BaseJavascript-->
+<script type="text/javascript" src="http://static.cybercommons.org/js/jquery-1.7.2.min.js"></script>
+<script type="text/javascript" src="http://static.cybercommons.org/js/jquery.jeditable.mini.js"></script>
+<script type="text/javascript" src="http://static.cybercommons.org/js/jquery-ui-1.8.10.custom.min.js"></script>
+<script type="text/javascript" src="http://static.cybercommons.org/mstacy/jquery.contextMenu.js"></script>
+<script type="text/javascript" src="http://static.cybercommons.org/css/bootstrap/js/bootstrap.min.js"></script>
+<!--Base CSS-->
+<link type="text/css" href="http://static.cybercommons.org/css/cybercomui/jquery-ui-1.8.13.custom.css" rel="Stylesheet"/>
+<link type="text/css" href="http://static.cybercommons.org/css/bootstrap/css/bootstrap.min.css" rel="Stylesheet"/>
+<link type="text/css" href="http://static.cybercommons.org/css/bootstrap/css/cybercommons.css" rel="Stylesheet"/>
+<link type="text/css" href="http://static.cybercommons.org/css/cybercom/style.css" rel="Stylesheet"/>
+<!--Custom App JS-CSS-->
+<script type="text/javascript" src="http://static.cybercommons.org/mstacy/json.js"></script>
+<link type="text/css" href="http://static.cybercommons.org/mstacy/json.css" rel="Stylesheet"/>
+<script>
+$(document).ready(function() { 
+    var options = { 
+        target:        \'#output1\',   // target element(s) to be updated with server response 
+    }; 
+    // bind form using \'ajaxForm\' 
+    //$(\'.catform\').ajaxForm(options); 
+    //$(\'.edit\').editable(\'http://production.cybercommons.org/mongodb/save/\');
+    //$('#tabs tabs-1').click(function (e) {
+    ///    e.preventDefault();
+    //    $(this).tab('show');
+    //});
+    $(\'#tabs\').tabs({ select: function(event,ui){
+            
+            if(ui.panel.id==\'tabs-3\'){
+                if($(\'#json_editor_loc\').html()==\'\'){
+                json_editor(\'json_editor_loc\',$(\'#jsoninput_location\').val());
+                apply_editlets();
+            }}
+            if(ui.panel.id==\'tabs-2\'){
+                if($(\'#json_editor_meta\').html()==\'\'){
+                json_editor(\'json_editor_meta\',$(\'#jsoninput_meta\').val());
+                apply_editlets();
+            }}
+        }
+        });
+});
+</script>
+</head>
+</head>
+<body>
+<div class="navbar" style="margin-bottom: 1px;">
+     <div class="navbar-inner" style="background: #1A5A80;">
+          <div class="container-fluid">
+               <a class="brand" href="/catalog1/data/"  style="color: white;">Cybercommons Catalog</a>
+
+                                <div class="nav-collapse">
+                                        <ul class="nav">
+                                                <li><a href="/catalog1/data/">Home</a></li>
+                                                <li><a data-toggle="modal" href="#about">About</a></li>
+                                                <li><a data-toggle="modal" href="#contact">Contact</a></li>
+                                                <li><a data-toggle="modal" href="#contact">$@user</a></li>
+                                        </ul>
+                                </div>
+
+                        </div>
+                </div>
+        </div>
+@body
+</body>
+</html>

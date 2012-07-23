@@ -1,0 +1,35 @@
+#compiler-settings
+cheetahVarStartToken = @
+#end compiler-settings
+#from base_html import base_html
+#extends base_html
+#def body
+<div id="header" >
+<img src="http://static.cybercommons.org/css/cyberlogo/CyberCommonsScreen.png" alt="Cybercommons Data Catalog" height="45" />
+<div id="userid" style="float:right;margin:15px;font-size:15px;color:black">Welcome, <a href="/accounts/profile/">@user</a></div>
+ </div>
+<table>
+<tr><td style="width:10%;"><a href='@baseurl/@FName/'>Data Commons</a></td><td>@database</td></tr>
+<tr><td>Metadata Filter</td><td></td><table>
+    <div id="tabs">
+       <ul>
+          <li><a href="#tabs-1">Catalog Data</a></li>
+          <li><a href="#tabs-2">Catalog Metadata</a></li>
+          <li><a href="#tabs-3">Catalog Locations</a></li>
+       </ul>
+        <div id="tabs-1">
+            <textarea id="jsoninput" rows="35" cols="24">@serial</textarea>
+            <div id="editarea" style="margin-top:60px;" class="rounded">
+                <strong>Data Commons:</strong> @database <strong>Records:</strong> @rec_info['startRecord'] - @rec_info['endRecord'] of @rec_info['totalRecords']
+                <div id="json_editor" data-role="myjson"></div>
+            </div>
+        </div>
+        <div id="tabs-2">Webservice template add .</div>    
+        <div id="tabs-3">Location</div>
+    </div>
+ <!--<textarea id="jsoninput" rows="35" cols="24">@serial</textarea>
+  <div id="editarea" style="margin-top:60px;" class="rounded">
+    <strong>Data Commons:</strong> @database <strong>Records:</strong> @rec_info['startRecord'] - @rec_info['endRecord'] of @rec_info['totalRecords']
+    <div id="json_editor" data-role="myjson"></div>
+  </div>-->
+#end def

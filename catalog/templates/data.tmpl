@@ -1,0 +1,47 @@
+#compiler-settings
+cheetahVarStartToken = @
+#end compiler-settings
+#from base_html import base_html
+#extends base_html
+#def body
+<table class="table table-striped rounded" style="margin-left:4px;margin-bottom: 1px;">
+<tr><td style="width:10%"><a href='@baseurl/@FName/'>Data Commons</a></td><td>@database</td></tr>
+<!--<tr><td>Catalog Items</td><td>
+  @rec_info['startRecord'] - @rec_info['endRecord'] Records of @rec_info['totalRecords']</br>
+  </td></tr>-->
+ </table>
+
+   <!-- <div id="tabss" class="nav nav-tabs rounded">-->
+        <ul id="tabs" class="nav nav-tabs tab-bar">
+            <li style="width:10%; margin-left:6px;" class="active"><a name="tabs-1" href="#tabs-1" data-toggle="tab">Catalog  Items</a></li>
+            <li><a name="tabs-2" href="#tabs-2" data-toggle="tab"> Metadata </a></li>
+            <li><a name="tabs-3" href="#tabs-3" data-toggle="tab"> Locations </a></li>
+        </ul>
+         <div class="tab-content" style="margin: -2.5px 2px 2px 2px; padding:0px;">
+          <div class="tab-pane active"  id="tabs-1" class="rounded">
+            <textarea id="jsoninput" rows="35" cols="24">@serial</textarea>
+            <div id="editarea"  class="rounded">
+                <strong>Data Commons:</strong> @database </br>
+                <strong>Catalog Items:</strong> @rec_info['startRecord'] - @rec_info['endRecord'] of @rec_info['totalRecords']
+                <div id="json_editor" data-role="myjson"></div>
+            </div>
+          </div>
+          <div class="tab-pane" id="tabs-2">
+            <textarea id="jsoninput_meta" rows="35" cols="24">@serialmeta</textarea>
+            <div id="editarea_meta"  class="rounded">
+                <strong>Data Commons:</strong> @database </br>
+                <strong>Metadata:</strong> @rec_info['startRecord'] - @rec_info['endRecord'] of @rec_info['totalRecords']
+                <div id="json_editor_meta" data-role="myjson"></div>
+            </div>
+          </div>
+          <div class="tab-pane"  id="tabs-3">
+            <textarea id="jsoninput_location" rows="35" cols="24">@seriallocation</textarea>
+            <div id="editarea_location"  class="rounded">
+                <strong>Data Commons:</strong> @database </br>
+                <strong>Locations:</strong> @rec_info['startRecord'] - @rec_info['endRecord'] of @rec_info['totalRecords']
+                <div id="json_editor_loc" data-role="myjson"></div>
+            </div>
+          </div>
+        </div>
+   <!-- </div>-->
+#end def
