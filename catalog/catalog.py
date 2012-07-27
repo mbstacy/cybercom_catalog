@@ -49,14 +49,6 @@ class Root(object):
             nameSpace = dict(database=res,baseurl=cherrypy.url('/')[:-1],FName=fname,user=user)        
             t = Template(file = templatepath + '/database.tmpl', searchList=[nameSpace])
             return t.respond()
-        #col1='data'
-        #if not col:
-        #    res= self.mongo.getcollections(db)
-        #    res.sort()
-        #    nameSpace = dict(database=db,collection=res,baseurl=cherrypy.url('/')[:-1],FName=fname,user=user)
-        #    t = Template(file = templatepath + '/collection.tmpl', searchList=[nameSpace])
-        #    return t.respond()
-        #if record == 'json':
         skip=(int(page)-1)*int(nPerpage)
         limit= int(nPerpage)
         dump_out=[]
@@ -79,35 +71,62 @@ class Root(object):
         for item in cur_meta:
             dump_out.append(item)
         serial_location = json.dumps(dump_out, default = handler, sort_keys=True)#, indent=4)
-        #else:
-        #    skip=(int(record)-1)
-        #    prev=int(record)-1
-        #    if prev < 1: 
-        #        prev=1
-        #    next=int(record)+1
-        #    limit=1
-        #    serialized=''
-        #    cur = self.mongo.getDoc(db,col,query,skip,limit)#.skip(int(record)-1).limit(1)
         info = self.mongo.getInfo(db,col,query,skip,limit)
         nameSpace = dict(database=db,collection=col,data=cur,baseurl=cherrypy.url('/')[:-1],
             serial=serialized,FName=fname,prev=prev,next=next,rec_info=info,user=user,serialmeta=serial_meta,seriallocation=serial_location)
         t = Template(file = templatepath + '/data.tmpl', searchList=[nameSpace])
         return t.respond()
+    
     @cherrypy.expose
     def save(self, **kwrgs):
+        try:
+            if cherrypy.request.login:
+                user = cherrypy.request.login
+            else:
+                user = "guest"
+        except:
+            user = "guest"
         if cherrypy.request.method =="POST":
             try:
                 doc=cherrypy.request.params
-                print str(doc)
                 db= doc['database']
-                col=doc['collection']
+                if not db in self.mongo.getdatabase(username=user):
+                    return json.dumps({'status':False,'description':'Error: User does not have permission to alter Data Commons '}, default = handler)    
+                if 'collection' in doc:
+                    col=doc['collection']
+                    doc.pop('collection')
+                else:
+                    col='data'
                 doc.pop('database')
-                doc.pop('collection')
-                return self.mongo.save(db,col,doc)#'commons',cherrypy.request.params)
+                return json.dumps({'status':True,'_id':self.mongo.save(db,col,doc)}, default = handler)
             except Exception as inst:
                 return str(inst)
         else:
             return 'Error: Save only accepts posts'
+    @cherrypy.expose
+    @mimetype('application/json')
+    def dropCommons(self,commons_name):
+        try:
+            if cherrypy.request.login:
+                user = cherrypy.request.login
+            else:
+                raise
+        except:
+            return json.dumps([{'status':False,'description':'Error returning User Information'}], default = handler)
+        dump_out=self.mongo.dropCommons(commons_name,user)
+        return json.dumps(dump_out, default = handler)
+    @cherrypy.expose
+    @mimetype('application/json')
+    def newCommons(self,commons_name):
+        try:
+            if cherrypy.request.login:
+                user = cherrypy.request.login
+            else:
+                raise
+        except:
+            return json.dumps([{'status':False,'description':'Error returning User Information'}], default = handler)
+        dump_out=self.mongo.newCommons(commons_name,user)
+        return json.dumps(dump_out, default = handler)
     @cherrypy.expose
     @mimetype('application/json')
     def getIndexes(self,database,collection):

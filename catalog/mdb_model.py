@@ -2,16 +2,18 @@ from pymongo import ReplicaSetConnection, Connection, ReadPreference
 from bson.objectid import ObjectId
 #from pymongo.objectid import ObjectId
 import ConfigParser,os,ast,pymongo
-
-
+cybercomdir = '/opt/cybercom'
+cybercomfile='cybercom.conf'
 class mongo_catalog():
 
-    def __init__(self,configfile='.cybercom',appdir='~'):
+    def __init__(self,configfile=cybercomfile,appdir=cybercomdir):
         cfgfile = os.path.join(os.path.expanduser(appdir), configfile)
         config= ConfigParser.RawConfigParser()
         config.read(cfgfile)
         self.dbcon = Connection(config.get('database','host'))
         self.dbcon.read_preference = ReadPreference.SECONDARY
+        self.dbwrite = Connection(config.get('database','host'))
+        self.dbwrite.read_preference = ReadPreference.PRIMARY
     def getdatabase(self,username="guest", **kwargs):
         #returns authorized databases
         return self.user_authDB(username)
@@ -43,10 +45,11 @@ class mongo_catalog():
             cur = self.dbcon[db][collection].find().skip(skip).limit(limit).sort([('_id',1)])
         return cur         
     def save(self,db,collection,document):
-        return "Save turned off while no auth in place for MongoDB"
-        if document['_id']:
+        #return "Save turned off while no auth in place for MongoDB"
+        if '_id' in document:
             document['_id']=ObjectId(document['_id'])
-        return self.dbcon[db][collection].save(document)
+        #return str(db) + '\n'+ str(collection) + '\n' + str(document)
+        return self.dbwrite[db][collection].save(document)
     def getkeys(self,database,collection,popID=True):
         #Returns Information regarding keys from database and collection
         col=database + "." + collection  
@@ -73,25 +76,48 @@ class mongo_catalog():
                 return str(ObjectId(id).generation_time)
             except:
                 return str(id.generation_time)
-    def newCommons(self,commons, owner):
-        #need to check for already existing Names
+    def dropCommons(self,commons,owner):
         try:
             userid=int(owner)
         except:
             userid=-999
         user=self.dbcon.cybercom_auth.user.find({'$or':[{'_id':userid},{'user':owner}]})
         if not user.count()==1:
-            return False
+            return [{'status':False,'description':'Error:User not in Catalog Users'}]
+        res = self.dbcon.cybercom_auth.commons_priviledges.find({'$or':[{'_id':userid},{'user':owner}]})
+        if not res.count()==1:
+            return [{'status':False,'description':'User does not have permission to drop data commons.'}]
+        else:
+            rec= res[0]
+        for d in rec['commons']:
+            if d["database"]==commons and d["permission"]=="rwa":
+                self.dbcon.drop_database(commons)
+                return [{'status':True,'description':'Data Commons Dropped'}]
+        return [{'status':False,'description':'User does not have permission or Data Commons does not exist.'}] 
+    def newCommons(self,commons,owner):
+        #need to check for already existing Names
+        if commons in self.dbcon.database_names():
+            return [{'status':False,'description':'Duplicate Commons Name'}]
+        try:
+            userid=int(owner)
+        except:
+            userid=-999
+        user=self.dbcon.cybercom_auth.user.find({'$or':[{'_id':userid},{'user':owner}]})
+        if not user.count()==1:
+            return [{'status':False,'description':'Error:User not in Catalog Users'}] 
         usr=user[0]
         res = self.dbcon.cybercom_auth.commons_priviledges.find({'$or':[{'_id':userid},{'user':owner}]})
         if not res.count()==1:
-            return False
-        rec= res[0]
+            rec = {"_id":userid,"user":owner,"commons":[]}
+        else:
+            rec= res[0]
+        for d in rec['commons']:
+            if d["database"]==commons:  
+                return [{'status':False,'description':'Commons Name must be unique'}] 
         rec['commons'].append({ "database" : commons, "permission" : "rwa" } )
         self.dbcon.cybercom_auth.commons_priviledges.save(rec)
         
-        return True
-        
+        return [{'status':True,'description':'Data Commons created succesfully.'}]
     def user_authDB(self,username):
         '''returns list of databases that username has authority to see'''
         try:
