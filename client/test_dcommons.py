@@ -5,8 +5,8 @@ import ConfigParser, os,datetime
 cfgfile = os.path.join(os.path.expanduser('~'), '.cybercom')
 config= ConfigParser.RawConfigParser()
 config.read(cfgfile)
-username = 'test123'#config.get('user','username')
-password = 'test123'#config.get('user','password')
+username = config.get('user','username')
+password = config.get('user','password')
 
 #Set new Commons Name. Must be unique across all users. Need to fix!
 commons_name = username + '_test'
