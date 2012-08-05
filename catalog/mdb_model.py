@@ -2,6 +2,7 @@ from pymongo import ReplicaSetConnection, Connection, ReadPreference
 from bson.objectid import ObjectId
 #from pymongo.objectid import ObjectId
 import ConfigParser,os,ast,pymongo
+import iso8601
 cybercomdir = '/opt/cybercom'
 cybercomfile='cybercom.conf'
 class mongo_catalog():
@@ -17,6 +18,16 @@ class mongo_catalog():
     def getdatabase(self,username="guest", **kwargs):
         #returns authorized databases
         return self.user_authDB(username)
+    def getpublic(self,auth='r'):
+        pdb=[]
+        pub_rec=self.check_auth('public')
+        for db in pub_rec['commons']:
+            if auth=='rw':
+                if db['permission']=='rw':
+                    pdb.append(db['database'])
+            elif auth == 'r':
+                pdb.append(db['database'])
+        return pdb        
     def getcollections(self,database):
         #returns collections associated with database 
         return self.dbcon[database].collection_names()
@@ -44,10 +55,12 @@ class mongo_catalog():
         else:
             cur = self.dbcon[db][collection].find().skip(skip).limit(limit).sort([('_id',1)])
         return cur         
-    def save(self,db,collection,document):
+    def save(self,db,collection,document,date_key):
         #return "Save turned off while no auth in place for MongoDB"
         if '_id' in document:
             document['_id']=ObjectId(document['_id'])
+        for key in date_key:
+            document[key]=iso8601.parse_date(document[key]) 
         #return str(db) + '\n'+ str(collection) + '\n' + str(document)
         return self.dbwrite[db][collection].save(document)
     def getkeys(self,database,collection,popID=True):
@@ -76,48 +89,71 @@ class mongo_catalog():
                 return str(ObjectId(id).generation_time)
             except:
                 return str(id.generation_time)
+    def setPublic(self,commons,user,auth,revoke):
+        setdesc={'r':'Read','rw':'Read/Write'}
+        rec = self.check_auth(user)
+        for d in rec['commons']:
+            if d["database"]==commons and d["permission"]=="rwa":
+                pub_rec=self.check_auth('public')
+                if revoke==True or revoke == 'True' or revoke == 'true':
+                    for d in pub_rec['commons']:
+                        if d["database"]==commons:
+                            self.del_Commons(d,pub_rec)
+                            desc= 'Data Commons: %s  Public Access Status: off' % (commons)
+                            return [{'status':True,'description':desc}]
+                    desc= 'Data Commons: %s - Public Access Status: off' % (commons)
+                    return [{'status':True,'description':desc}]
+                for d in pub_rec['commons']:
+                    if d["database"]==commons:
+                        self.del_Commons(d,pub_rec)
+                        pub_rec['commons'].append({ "database" : commons, "permission" : auth } )
+                        self.dbwrite.cybercom_auth.commons_priviledges.save(pub_rec)
+                        desc= 'Data Commons: %s  Public Access Status: %s Permissions' % (commons,setdesc[auth])
+                        return [{'status':True,'description':desc}]
+                pub_rec['commons'].append({ "database" : commons, "permission" : auth } )
+                self.dbwrite.cybercom_auth.commons_priviledges.save(pub_rec)
+                desc= 'Data Commons: %s  Public Access Status: %s Permissions' % (commons,setdesc[auth])
+                return [{'status':True,'description':desc}]    
+        return [{'status':False,'description':'User does not have permission or data commons does not exist.'}]
+
     def dropCommons(self,commons,owner):
-        try:
-            userid=int(owner)
-        except:
-            userid=-999
-        user=self.dbcon.cybercom_auth.user.find({'$or':[{'_id':userid},{'user':owner}]})
-        if not user.count()==1:
-            return [{'status':False,'description':'Error:User not in Catalog Users'}]
-        res = self.dbcon.cybercom_auth.commons_priviledges.find({'$or':[{'_id':userid},{'user':owner}]})
-        if not res.count()==1:
-            return [{'status':False,'description':'User does not have permission to drop data commons.'}]
-        else:
-            rec= res[0]
+        rec = self.check_auth(owner) 
         for d in rec['commons']:
             if d["database"]==commons and d["permission"]=="rwa":
                 self.dbcon.drop_database(commons)
-                return [{'status':True,'description':'Data Commons Dropped'}]
+                return self.del_Commons(d,rec)
+                #return [{'status':True,'description':'Data Commons Dropped'}]
         return [{'status':False,'description':'User does not have permission or Data Commons does not exist.'}] 
     def newCommons(self,commons,owner):
         #need to check for already existing Names
         if commons in self.dbcon.database_names():
-            return [{'status':False,'description':'Duplicate Commons Name'}]
+            return [{'status':False,'description':'Data Commons Name must be unique.'}]
+        rec = self.check_auth(owner)
+        for d in rec['commons']:
+            if d["database"]==commons:  
+                return [{'status':False,'description':'Data Commons Name must be unique.'}] 
+        rec['commons'].append({ "database" : commons, "permission" : "rwa" } )
+        self.dbwrite.cybercom_auth.commons_priviledges.save(rec)
+        
+        return [{'status':True,'description':'Data Commons created succesfully.'}]
+    def del_Commons(self,item,doc):
+        try:
+            doc['commons'].remove(item)
+            self.dbwrite.cybercom_auth.commons_priviledges.save(doc)
+            return [{'status':True,'description':'Data Commons Dropped'}]
+        except:
+            return [{'status':False,'description':'Error deleting Data Commons from cybercom_auth'}]
+    def check_auth(self,owner):
         try:
             userid=int(owner)
         except:
             userid=-999
-        user=self.dbcon.cybercom_auth.user.find({'$or':[{'_id':userid},{'user':owner}]})
-        if not user.count()==1:
-            return [{'status':False,'description':'Error:User not in Catalog Users'}] 
-        usr=user[0]
         res = self.dbcon.cybercom_auth.commons_priviledges.find({'$or':[{'_id':userid},{'user':owner}]})
         if not res.count()==1:
             rec = {"_id":userid,"user":owner,"commons":[]}
         else:
             rec= res[0]
-        for d in rec['commons']:
-            if d["database"]==commons:  
-                return [{'status':False,'description':'Commons Name must be unique'}] 
-        rec['commons'].append({ "database" : commons, "permission" : "rwa" } )
-        self.dbcon.cybercom_auth.commons_priviledges.save(rec)
-        
-        return [{'status':True,'description':'Data Commons created succesfully.'}]
+        return rec
     def user_authDB(self,username):
         '''returns list of databases that username has authority to see'''
         try:
@@ -127,6 +163,11 @@ class mongo_catalog():
         output=[]
         dbs = self.dbcon.cybercom_auth.commons_priviledges.find({'$or':[{'_id':userid},{'user':username}]},['commons'])
         if dbs.count()== 0:
+            if userid==-999:
+                user_per={ "_id" : username, "user" : username, "commons" : [ ]}
+            else:
+                user_per={ "_id" : userid, "user" : username, "commons" : [ ]}
+            self.dbwrite.cybercom_auth.commons_priviledges.save(user_per)
             return output
         for db in dbs[0]['commons']:
             output.append(db['database'])

@@ -1,5 +1,5 @@
 import cherrypy
-import json, os #, math,commands,ast
+import json, os,ast
 import urllib2,cookielib
 #import pickle
 #from celery.result import AsyncResult
@@ -10,6 +10,8 @@ from datetime import datetime
 from Cheetah.Template import Template
 import mdb_model
 from json_handler import handler
+from get import find,group,distinct
+#from convert import *
 '''
 
 MongoDB web interface with 
@@ -24,6 +26,7 @@ def mimetype(type):
             return func(*args, **kwargs)
         return wrapper
     return decorate
+
 
 class Root(object):
     def __init__(self,mongoHost='fire.rccc.ou.edu',port=27017,database='cybercom_queue',collection='task_log'):
@@ -43,12 +46,14 @@ class Root(object):
         except:
             user = "guest"
         #return str(user)
+        res= self.mongo.getdatabase(username=user)
+        res.sort()
         if not db:
-            res= self.mongo.getdatabase(username=user)
-            res.sort()
             nameSpace = dict(database=res,baseurl=cherrypy.url('/')[:-1],FName=fname,user=user)        
             t = Template(file = templatepath + '/database.tmpl', searchList=[nameSpace])
             return t.respond()
+        if db not in res:
+            return json.dumps([{'status':False,'description':'User dos not have permissions to view Data Commons'}], default = handler)
         skip=(int(page)-1)*int(nPerpage)
         limit= int(nPerpage)
         dump_out=[]
@@ -98,7 +103,15 @@ class Root(object):
                 else:
                     col='data'
                 doc.pop('database')
-                return json.dumps({'status':True,'_id':self.mongo.save(db,col,doc)}, default = handler)
+                data = json.loads(doc['data'])
+                try:
+                    dkey=ast.literal_eval(doc['date_keys'])
+                except Exception as inst:
+                    #print inst
+                    dkey=[]
+                #print type(data), type(dkey), type(doc['date_keys'])
+                #print dkey
+                return json.dumps({'status':True,'_id':self.mongo.save(db,col,data,dkey)}, default = handler)
             except Exception as inst:
                 return str(inst)
         else:
@@ -127,6 +140,89 @@ class Root(object):
             return json.dumps([{'status':False,'description':'Error returning User Information'}], default = handler)
         dump_out=self.mongo.newCommons(commons_name,user)
         return json.dumps(dump_out, default = handler)
+    @cherrypy.expose
+    @mimetype('application/json')
+    def setPublic(self,commons_name,auth='r',revoke=False):
+        try:
+            if cherrypy.request.login:
+                user = cherrypy.request.login
+            else:
+                user = "guest"
+        except:
+            user = "guest"
+        if auth in ['r','rw']:
+            return json.dumps(self.mongo.setPublic(commons_name,user,auth,revoke), default = handler)
+        else:
+            return json.dumps([{'status':False,'description':'Auth must be either r or rw'}], default = handler)
+    @cherrypy.expose
+    @mimetype('application/json')
+    @cherrypy.tools.gzip()
+    def db_find(self, db=None, col=None, query=None, callback=None, showids=None, date=None, outtype=None, **kwargs):
+        """ 
+        Wrapper for underlying pymongo access
+        """
+        try:
+            if cherrypy.request.login:
+                user = cherrypy.request.login
+            else:
+                user = "guest"
+        except:
+            user = "guest"
+        #return str(user)
+        res= self.mongo.getdatabase(username=user)
+        res.sort()
+        pub_res= self.mongo.getpublic()
+        pub_res.sort()
+        if not db:
+            rtn = {'My Data Commons':res, 'Public Data Commons':pub_res}
+            return json.dumps(rtn , default = handler, sort_keys=True, indent=4)
+        if db in res or db in pub_res:
+            return find(db, col, query, callback, showids, date)
+        else:
+            return json.dumps([{'status':False,'description':'User dos not have permissions to view Data Commons'}], default = handler)
+    @cherrypy.expose
+    @mimetype('application/json')
+    @cherrypy.tools.gzip()
+    def distinct(self, db=None, col=None, distinct_key=None, query=None, callback=None, **kwargs):
+        try:
+            if cherrypy.request.login:
+                user = cherrypy.request.login
+            else:
+                user = "guest"
+        except:
+            user = "guest"
+        #return str(user)
+        res= self.mongo.getdatabase(username=user)
+        res.sort()
+        if not db:
+            return json.dumps(res , default = handler)
+        if db in res:
+            return distinct(db,col,distinct_key,query,callback)
+        else:
+            return json.dumps([{'status':False,'description':'User dos not have permissions to view Data Commons'}], default = handler)
+    @cherrypy.expose
+    @mimetype('application/json')
+    @cherrypy.tools.gzip()
+    def group_by(self, db=None, col=None,key=None,variable=None, query=None,callback=None, outtype=None, **kwargs):
+        """ 
+        Wrapper for underlying pymongo access
+        """
+        try:
+            if cherrypy.request.login:
+                user = cherrypy.request.login
+            else:
+                user = "guest"
+        except:
+            user = "guest"
+        #return str(user)
+        res= self.mongo.getdatabase(username=user)
+        res.sort()
+        if not db:
+            return json.dumps(res , default = handler)
+        if db in res:
+            return group(db, col, key,variable,query,callback)
+        else:
+            return json.dumps([{'status':False,'description':'User dos not have permissions to view Data Commons'}], default = handler)
     @cherrypy.expose
     @mimetype('application/json')
     def getIndexes(self,database,collection):
