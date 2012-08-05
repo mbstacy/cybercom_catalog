@@ -126,7 +126,7 @@ $(document).ready(function() {
 
                                 <div class="nav-collapse">
                                         <ul class="nav">
-                                                <li><a href="/catalog1/data/">Home</a></li>
+                                                <li><a href="/catalog/data/">Home</a></li>
                                                 <li class="dropdown"><a href="#" class="dropdown-toggle" data-toggle="dropdown">Edit <b class="caret"></b></a>
                                                     <ul class="dropdown-menu">
                                                         <li><a data-toggle="modal" href="#new_commons">New Data Commons</a></li>
@@ -144,10 +144,7 @@ $(document).ready(function() {
                                 </div>
                                         <ul class="nav pull-right">
                                                 <li><a data-toggle="modal" href="#contact">Contact</a></li>
-                                                <li><a data-toggle="modal" href="/accounts/profile/">Welcome, ''')
-        _v = VFFSL(SL,"user",True) # u'@user' on line 63, col 93
-        if _v is not None: write(_filter(_v, rawExpr=u'@user')) # from line 63, col 93.
-        write(u'''</a></li>
+                                                <li><a id="auth_message" data-toggle="modal" href="/accounts/profile/"></a></li>
                                         </ul>
                         </div>
                 </div>

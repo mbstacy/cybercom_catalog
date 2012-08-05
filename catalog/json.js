@@ -1,4 +1,5 @@
                 $(function(){
+                        test_auth_tkt();
                         $(document).bind("contextmenu",function(e){
                           return false;
                         }); 
@@ -14,12 +15,46 @@
 			//json_editor('json_editor_loc',$('#jsoninput_location').val());
                         // add the jquery editing magic
                         apply_editlets();
-
+                
                        // $('#jsoninput').click(function(){
                        //         $(this).focus();
                        //         $(this).select();
                        // });
+                    $('#createDC').click(function(){
+                        var cname = $('#form_DC_Name').val();
+                        if (cname==''){
+                            alert('Please enter Commons Name');
+                        }
+                        else{
+                            var link ='/catalog/newCommons/' + cname;
+                            $.getJSON(link,function(data){
+                                if(data[0]['status']=== true){
+                                    alert('Data Commons:' + cname + '\n\n' + data[0]['description']);
+                                    document.location.reload(true);
+                                }
+                                else{
+                                    alert('Data Commons:' + cname + '\n\n' +data[0]['description']);
+                                }        
+                            }); 
+                            //alert($('#form_DC_Name').val());
+                        }
+                    });
                 });
+                function test_auth_tkt() {
+                   $.getJSON('/accounts/userdata/?callback=?',function(data){
+                        var slink = "/accounts/login/?next=".concat(document.URL);
+                        if ( data['user']['name'] == "guest"){
+                            //var slink = baseurl_auth + "accounts/login/?next=".concat(document.URL);
+                            window.location = slink; 
+                        }
+                        else{
+                            var slink = "/accounts/profile/" 
+                            slogout = '<a data-toggle="modal" href="' + slink + '">' + data['user']['name'] + '</a>'
+                            //slogout = '<a href="' + slink + '">' + data['user']['name'] + '</a>!';
+                            $('#auth_message').html("Welcome, " + data['user']['name']);//slogout);
+                        }       
+                    });
+                }
                 
                 // stuff for the modal ws window
                 function display_ws_modal() {
