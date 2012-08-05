@@ -3,6 +3,8 @@ psycopg2
 iso8601
 simplejson
 geojson
+#numpy
+#pandas
 sqlalchemy
 cherrypy
 Cheetah

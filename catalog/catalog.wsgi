@@ -14,7 +14,6 @@ site.addsitedir(basedir + 'catalog')
 import cherrypy
 from cherrypy import wsgiserver
 from catalog import Root
-
     
 application = cherrypy.Application(Root(), script_name=None, config = None )# , config={ '/': {'tools.xmlrpc.on': True }} )
 

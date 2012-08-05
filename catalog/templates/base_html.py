@@ -141,10 +141,7 @@ $(document).ready(function() {
                                                 <li><a href="/catalog1/data/">Home</a></li>
                                                 <li><a data-toggle="modal" href="#about">About</a></li>
                                                 <li><a data-toggle="modal" href="#contact">Contact</a></li>
-                                                <li><a data-toggle="modal" href="#contact">$''')
-        _v = VFFSL(SL,"user",True) # u'@user' on line 63, col 93
-        if _v is not None: write(_filter(_v, rawExpr=u'@user')) # from line 63, col 93.
-        write(u'''</a></li>
+                                                <li><div id="auth_message"></div></li>
                                         </ul>
                                 </div>
 
