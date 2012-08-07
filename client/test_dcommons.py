@@ -9,7 +9,7 @@ username = config.get('user','username')
 password = config.get('user','password')
 
 #Set new Commons Name. Must be unique across all users. Need to fix!
-commons_name = username + '_test'
+commons_name = username + '_test6'
 
 #initialize Data Commons Toolkit
 
@@ -29,7 +29,7 @@ print records
 #Create Data Commons
 
 print dcommons.createCommons(commons_name)
-
+print dcommons.setPublic(commons_name,auth='r')
 for doc in records:
     #example to change list of dictionary to single dictionary
     data = {}
@@ -39,5 +39,5 @@ for doc in records:
     #example using date
     doc['input_date'] = datetime.datetime.now()
     #save requires commons name, document and a list of date keys
-    dcommons.save(commons_name,doc,["input_date"])
+    dcommons.save(commons_name,doc,["input_date"],collection='Location')
 

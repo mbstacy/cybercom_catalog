@@ -28,8 +28,9 @@ class toolkit():
     def get_urllib2(self):
         '''Returns urllib2 with cookies from cybercommons login'''
         return urllib2
-    def save(self,commons_name, document,date_keys=[],url=base_url + 'save'):
+    def save(self,commons_name, document,date_keys=[],url=base_url + 'save',collection='data'):
         param = {'database':commons_name,'data':json.dumps(document,default = handler),'date_keys':json.dumps(date_keys,default = handler)}
+        param['collection']=collection
         result= self.execWS(url,param)
         try:
             if result['status']:
@@ -44,8 +45,9 @@ class toolkit():
     def dropCommons(self,commons_name,url=base_url + 'dropCommons'):
         param={'commons_name':commons_name}
         return self.execWS(url,param)
-    def setPublic(self, commons_name,auth='r',revoke=False,url=base_url + 'setPublic'):
-        param={'commons_name':commons_name,'auth':auth,'revoke':revoke}
+    def setPublic(self, commons_name,auth='r',url=base_url + 'setPublic'):
+        #auth n, r , rw for  None,read, and read/write
+        param={'commons_name':commons_name,'auth':auth}
         return self.execWS(url,param)
     def execWS(self, url, data):
         try:
