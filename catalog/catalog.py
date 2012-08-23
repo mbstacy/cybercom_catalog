@@ -95,17 +95,23 @@ class Root(object):
             user = "guest"
         if cherrypy.request.method =="POST":
             try:
-                doc=cherrypy.request.params
-                db= doc['database']
+                if cherrypy.request.headers['Content-Type'] == "application/json":
+                    cl = cherrypy.request.headers['Content-Length']
+                    doc = json.loads(cherrypy.request.body.read(int(cl)))
+                    data = doc['data']
+                else:  
+                    doc=cherrypy.request.params
+                    data = json.loads(doc['data'])
+                db = doc['database']
                 if not db in self.mongo.getdatabase(username=user):
                     return json.dumps({'status':False,'description':'Error: User does not have permission to alter Data Commons '}, default = handler)    
                 if 'collection' in doc:
-                    col=doc['collection']
+                    col = doc['collection']
                     #doc.pop('collection')
                 else:
                     col='data'
                 doc.pop('database')
-                data = json.loads(doc['data'])
+                
                 try:
                     dkey=ast.literal_eval(doc['date_keys'])
                 except Exception as inst:
