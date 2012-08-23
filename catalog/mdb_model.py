@@ -15,7 +15,31 @@ class mongo_catalog():
         self.dbcon.read_preference = ReadPreference.SECONDARY
         self.dbwrite = Connection(config.get('database','host'))
         self.dbwrite.read_preference = ReadPreference.PRIMARY
-    def getdatabase(self,username="guest", **kwargs):
+    def getdatabase(self,username="guest",multiple=False, **kwargs):
+        if multiple:
+            priv =[]
+            pub=[]
+            cpub=[]
+            lapub=[]
+            res =self.user_authDB(username)
+            pub_rec=self.check_auth('public')
+            for d in pub_rec['commons']:
+                lapub.append(d['database'])
+                if d['database'] in res:
+                    temp = d
+                    if temp['permission']=='r':
+                        temp['permission']='Read'
+                    elif temp['permission']=='rw':
+                        temp['permission']='Read/Write'
+                    pub.append(temp)
+                else:
+                    temp = d
+                    if temp['permission']=='r':
+                        temp['permission']='Read'
+                    elif temp['permission']=='rw':
+                        temp['permission']='Read/Write'
+                    cpub.append(temp)
+            return res,pub,cpub,lapub
         #returns authorized databases
         return self.user_authDB(username)
     def getpublic(self,auth='r'):
@@ -89,13 +113,13 @@ class mongo_catalog():
                 return str(ObjectId(id).generation_time)
             except:
                 return str(id.generation_time)
-    def setPublic(self,commons,user,auth,revoke):
-        setdesc={'r':'Read','rw':'Read/Write'}
+    def setPublic(self,commons,user,auth):
+        setdesc={'r':'Read','rw':'Read/Write','n':'off'}
         rec = self.check_auth(user)
         for d in rec['commons']:
             if d["database"]==commons and d["permission"]=="rwa":
                 pub_rec=self.check_auth('public')
-                if revoke==True or revoke == 'True' or revoke == 'true':
+                if auth =='n': #revoke==True or revoke == 'True' or revoke == 'true':
                     for d in pub_rec['commons']:
                         if d["database"]==commons:
                             self.del_Commons(d,pub_rec)

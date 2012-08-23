@@ -5,7 +5,7 @@ cheetahVarStartToken = @
 #extends base_html
 #def body
 <table class="table table-striped rounded" style="margin-left:4px;margin-bottom: 1px;">
-<tr><td style="width:10%"><a href='@baseurl/@FName/'>Data Commons</a></td><td>@database</td></tr>
+<tr><td style="width:10%"><a href='@baseurl/@FName/'>Data Commons</a></td><td id='commons_name'>@database</td></tr>
 <!--<tr><td>Catalog Items</td><td>
   @rec_info['startRecord'] - @rec_info['endRecord'] Records of @rec_info['totalRecords']</br>
   </td></tr>-->
@@ -44,4 +44,5 @@ cheetahVarStartToken = @
           </div>
         </div>
    <!-- </div>-->
+<div id='editparam-dialog'></div>
 #end def

@@ -46,14 +46,16 @@ class Root(object):
         except:
             user = "guest"
         #return str(user)
-        res= self.mongo.getdatabase(username=user)
+        res,pub,cpub,list_all_pub= self.mongo.getdatabase(username=user,multiple=True)
         res.sort()
+        pub.sort()
         if not db:
-            nameSpace = dict(database=res,baseurl=cherrypy.url('/')[:-1],FName=fname,user=user)        
+            nameSpace = dict(database=res,pub_acc=pub,com_acc=cpub,baseurl=cherrypy.url('/')[:-1],FName=fname,user=user)        
             t = Template(file = templatepath + '/database.tmpl', searchList=[nameSpace])
             return t.respond()
         if db not in res:
-            return json.dumps([{'status':False,'description':'User dos not have permissions to view Data Commons'}], default = handler)
+            if db not in list_all_pub:
+                return json.dumps([{'status':False,'description':'User dos not have permissions to view Data Commons'}], default = handler)
         skip=(int(page)-1)*int(nPerpage)
         limit= int(nPerpage)
         dump_out=[]
@@ -99,7 +101,7 @@ class Root(object):
                     return json.dumps({'status':False,'description':'Error: User does not have permission to alter Data Commons '}, default = handler)    
                 if 'collection' in doc:
                     col=doc['collection']
-                    doc.pop('collection')
+                    #doc.pop('collection')
                 else:
                     col='data'
                 doc.pop('database')
@@ -142,7 +144,7 @@ class Root(object):
         return json.dumps(dump_out, default = handler)
     @cherrypy.expose
     @mimetype('application/json')
-    def setPublic(self,commons_name,auth='r',revoke=False):
+    def setPublic(self,commons_name,auth='r'):
         try:
             if cherrypy.request.login:
                 user = cherrypy.request.login
@@ -150,8 +152,8 @@ class Root(object):
                 user = "guest"
         except:
             user = "guest"
-        if auth in ['r','rw']:
-            return json.dumps(self.mongo.setPublic(commons_name,user,auth,revoke), default = handler)
+        if auth in ['n','r','rw']:
+            return json.dumps(self.mongo.setPublic(commons_name,user,auth), default = handler)
         else:
             return json.dumps([{'status':False,'description':'Auth must be either r or rw'}], default = handler)
     @cherrypy.expose
@@ -230,75 +232,7 @@ class Root(object):
         #cherrypy.response.headers['Content-Type'] = 'application/json'
         return json.dumps([indx], default = handler, sort_keys=True, indent=4)
         #pass#self.mongo
-    @cherrypy.expose
-    @mimetype('application/json')
-    def get_user(self,url='http://production.cybercommons.org/accounts/userdata/',cookies=None):
-        #import urllib2
-        #return cherrypy.request.cookie
-        #return cherrypy.url() #path='', qs='', script_name=None, base=None, relative=None)
-        cj=self.create_cookiejar(cherrypy.request,cherrypy.url())
 
-        opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(cj))
-        urllib2.install_opener(opener)
-        user=urllib2.urlopen('http://test.cybercommons.org/accounts/userdata/')
-        #if not cookies:
-        #    cookies=cherrypy.request.cookie
-        #opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(cj),urllib2.HTTPHandler())
-        #rest=''
-        #for name in cookies.keys():
-        #    cookie= "%s=%s" % (name, cookies[name].value)
-        #    rest=rest + cookie
-        #    opener.addheaders.append(('Cookie', cookie))
-        #return rest + ' ' + str(opener.open(url))
-        result =  user.read()  + str(len(cj))#opener.open(urllib2.Request(url))
-        for cok in cj:
-            result = result + str(cok) + '=' + cok.value
-
-        return result
-    def create_cookiejar(self,cherrypy_request,browser_url):
-        "Returns a cookielib.CookieJar based on cookies found in cherrypy.request"
-
-        req = cherrypy_request
-        cookiejar = cookielib.CookieJar()
-        # fake request to make cookielib happy
-        fake_req = FakeRequest(req,browser_url)
-        for cookie_name, morsel in req.cookie.items():#req.simple_cookie.items():
-            std_attr = {}
-            # copy attributes that have values
-            for attr in morsel.keys():
-                if morsel[attr]:
-                    std_attr[attr]=morsel[attr]
-            tup = (cookie_name, morsel.value, std_attr, {})
-            new_cookie = cookiejar._cookie_from_cookie_tuple(tup, fake_req)
-
-            cookiejar.set_cookie(new_cookie)
-
-        return cookiejar
-class FakeRequest(object):
-    """A request object that pretends it is a urlib2.Request.
-
-    Not a full implementation, but enough to get by.
-    """
-
-    def __init__(self, cherrypy_request,browser_url):
-        self.req = cherrypy_request
-        self.url = browser_url
-    def get_full_url(self):
-        return self.url
-
-    def get_host(self):
-        return self.req.headers['Host']
-
-    def get_type(self):
-        return self.req.scheme
-
-    def is_unverifiable(self):
-        # Assuming everything has been verified
-        return False
-
-    def get_origin_req_host(self):
-        # Again, this is more of a client function, so punting
-        return self.req.headers['Host']
 cherrypy.tree.mount(Root())
 application = cherrypy.tree
 

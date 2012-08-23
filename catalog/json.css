@@ -7,6 +7,8 @@
                         padding: 0px;
                         margin: 0px;
                 }
+                /*.row_even{background:#d9e2e3;}
+                .row_odd{background: #f5f1f2;}*/
                 .table{width: 99.4%;}
                 .rounded {
                         -moz-border-radius: 5px;

@@ -122,19 +122,19 @@ $(document).ready(function() {
 <div class="navbar" style="margin-bottom: 1px;">
      <div class="navbar-inner" style="background: #1A5A80;">
           <div class="container-fluid">
-               <a class="brand" href="/catalog1/data/"  style="color: white;">Cybercommons Catalog</a>
+               <a class="brand" href="/catalog/data/"  style="color: white;">Cybercommons Catalog</a>
 
                                 <div class="nav-collapse">
                                         <ul class="nav">
                                                 <li><a href="/catalog/data/">Home</a></li>
-                                                <li class="dropdown"><a href="#" class="dropdown-toggle" data-toggle="dropdown">Edit <b class="caret"></b></a>
+                                                <li class="dropdown"><a href="#" class="dropdown-toggle" data-toggle="dropdown">Data Commons<b class="caret"></b></a>
                                                     <ul class="dropdown-menu">
-                                                        <li><a data-toggle="modal" href="#new_commons">New Data Commons</a></li>
                                                         <li class="divider"></li>
-                                                        <li><a href="#">Another action</a></li>
-                                                        <li><a href="#">Something else here</a></li>
+                                                        <li><a data-toggle="modal" href="#new_commons">New Data Commons </a></li>
+                                                        <li><a data-toggle="modal" href="#del_commons">Drop Data Commons </a></li>
                                                         <li class="divider"></li>
-                                                        <li><a href="#">Separated link</a></li>
+                                                        <li><a data-toggle="modal" href="#share_commons">Set Public Access </a></li>
+                                                        <li class="divider"></li>
                                                     </ul>
                                                 </li>
                                                 <li><a data-toggle="modal" href="#about">About</a></li>
@@ -143,7 +143,6 @@ $(document).ready(function() {
                                         </ul>
                                 </div>
                                         <ul class="nav pull-right">
-                                                <li><a data-toggle="modal" href="#contact">Contact</a></li>
                                                 <li><a id="auth_message" data-toggle="modal" href="/accounts/profile/"></a></li>
                                         </ul>
                         </div>
@@ -156,7 +155,7 @@ $(document).ready(function() {
 </body>
 </html>
 ''')
-        
+        #<li><a data-toggle="modal" href="#contact">Contact</a></li>
         ########################################
         ## END - generated method body
         
