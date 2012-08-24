@@ -106,7 +106,7 @@ class Root(object):
                 else:  
                     doc=cherrypy.request.params
                     data = json.loads(doc['data'])
-                    if doc.has_key('date_keys')
+                    if doc.has_key('date_keys'):
                         dkey = ast.literal_eval(doc['date_keys'])
                     else:
                         dkey = []
