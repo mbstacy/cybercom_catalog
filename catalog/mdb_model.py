@@ -81,10 +81,19 @@ class mongo_catalog():
         return cur         
     def save(self,db,collection,document,date_key):
         #return "Save turned off while no auth in place for MongoDB"
-        if '_id' in document:
-            document['_id']=ObjectId(document['_id'])
-        for key in date_key:
-            document[key]=iso8601.parse_date(document[key]) 
+        try:
+            if '_id' in document:
+                document['_id']=ObjectId(document['_id']['$oid'])
+        except Exception as inst:
+            try:
+                document['_id']=ObjectId(document['_id'])
+            except:
+                raise 
+        try:
+            for key in date_key:
+                document[key]=iso8601.parse_date(document[key]) 
+        except Exception as inst:
+            raise inst
         #return str(db) + '\n'+ str(collection) + '\n' + str(document)
         return self.dbwrite[db][collection].save(document)
     def getkeys(self,database,collection,popID=True):

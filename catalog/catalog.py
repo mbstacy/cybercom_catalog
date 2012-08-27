@@ -1,5 +1,5 @@
 import cherrypy
-import json, os,ast
+import json, os,ast,types
 import urllib2,cookielib
 #import pickle
 #from celery.result import AsyncResult
@@ -11,13 +11,19 @@ from Cheetah.Template import Template
 import mdb_model
 from json_handler import handler
 from get import find,group,distinct
+from cybercom.data.mongo import get
 #from convert import *
+import ConfigParser
 '''
 
 MongoDB web interface with 
 
 '''
 templatepath= os.path.abspath(os.path.join(os.path.dirname(__file__), 'templates'))
+cybercomdir = '/opt/cybercom'
+cybercomfile='cybercom.conf'
+cfgfile = os.path.join(os.path.expanduser(cybercomdir), cybercomfile)
+config= ConfigParser.RawConfigParser()
 
 def mimetype(type):
     def decorate(func):
@@ -29,12 +35,16 @@ def mimetype(type):
 
 
 class Root(object):
-    def __init__(self,mongoHost='fire.rccc.ou.edu',port=27017,database='cybercom_queue',collection='task_log'):
+    def __init__(self):
         self.mongo = mdb_model.mongo_catalog()
-    #@cherrypy.expose
-    #def index(self):
-    #    #cherrypy.InternalRedirect("/data")
-    #    cherrypy.HTTPRedirect("/catalog/data/")
+        config.read(cfgfile)
+        host = config.get('database','host')
+        port = int(config.get('database','port'))
+        self.getdata = get.data(host, port)
+    @cherrypy.expose
+    def index(self):
+        #raise cherrypy.InternalRedirect("data")
+        raise cherrypy.HTTPRedirect("/catalog/data/")
     @cherrypy.expose
     def data(self,db=None,col='data',query={},record=1,page=1,nPerpage=100, **kwargs):
         fname='data'
@@ -99,29 +109,28 @@ class Root(object):
                     cl = cherrypy.request.headers['Content-Length']
                     doc = json.loads(cherrypy.request.body.read(int(cl)))
                     data = doc['data']
+                    if doc.has_key('date_keys'):
+                        dkey = doc['date_keys']
+                    else:
+                        dkey=[]
                 else:  
                     doc=cherrypy.request.params
                     data = json.loads(doc['data'])
+                    if doc.has_key('date_keys'):
+                        dkey = ast.literal_eval(doc['date_keys'])
+                    else:
+                        dkey = []
                 db = doc['database']
                 if not db in self.mongo.getdatabase(username=user):
                     return json.dumps({'status':False,'description':'Error: User does not have permission to alter Data Commons '}, default = handler)    
                 if 'collection' in doc:
                     col = doc['collection']
-                    #doc.pop('collection')
                 else:
                     col='data'
                 doc.pop('database')
-                
-                try:
-                    dkey=ast.literal_eval(doc['date_keys'])
-                except Exception as inst:
-                    #print inst
-                    dkey=[]
-                #print type(data), type(dkey), type(doc['date_keys'])
-                #print dkey
                 return json.dumps({'status':True,'_id':self.mongo.save(db,col,data,dkey)}, default = handler)
             except Exception as inst:
-                return str(inst)
+                raise inst #return str(inst)
         else:
             return 'Error: Save only accepts posts'
     @cherrypy.expose
@@ -185,7 +194,7 @@ class Root(object):
             rtn = {'My Data Commons':res, 'Public Data Commons':pub_res}
             return json.dumps(rtn , default = handler, sort_keys=True, indent=4)
         if db in res or db in pub_res:
-            return find(db, col, query, callback, showids, date)
+            return self.getdata.find(db, col, query, callback, showids, date)
         else:
             return json.dumps([{'status':False,'description':'User dos not have permissions to view Data Commons'}], default = handler)
     @cherrypy.expose
@@ -202,10 +211,16 @@ class Root(object):
         #return str(user)
         res= self.mongo.getdatabase(username=user)
         res.sort()
+        pub_res= self.mongo.getpublic()
+        pub_res.sort()
+        #res= self.mongo.getdatabase(username=user)
+        #res.sort()
         if not db:
-            return json.dumps(res , default = handler)
-        if db in res:
-            return distinct(db,col,distinct_key,query,callback)
+            rtn = {'My Data Commons':res, 'Public Data Commons':pub_res}
+            return json.dumps(rtn , default = handler, sort_keys=True, indent=4)
+            #return json.dumps(res , default = handler)
+        if db in res or db in pub_res:
+            return self.getdata.distinct(db,col,distinct_key,query,callback)
         else:
             return json.dumps([{'status':False,'description':'User dos not have permissions to view Data Commons'}], default = handler)
     @cherrypy.expose
@@ -222,13 +237,15 @@ class Root(object):
                 user = "guest"
         except:
             user = "guest"
-        #return str(user)
         res= self.mongo.getdatabase(username=user)
         res.sort()
+        pub_res= self.mongo.getpublic()
+        pub_res.sort()
         if not db:
-            return json.dumps(res , default = handler)
-        if db in res:
-            return group(db, col, key,variable,query,callback)
+            rtn = {'My Data Commons':res, 'Public Data Commons':pub_res}
+            return json.dumps(rtn , default = handler, sort_keys=True, indent=4)
+        if db in res or db in pub_res:
+            return self.getdata.group(db, col, key,variable,query,callback)
         else:
             return json.dumps([{'status':False,'description':'User dos not have permissions to view Data Commons'}], default = handler)
     @cherrypy.expose
