@@ -1,4 +1,4 @@
-import urllib, urllib2, cookielib#,json
+import urllib, urllib2, cookielib,json
 from json_handler import handler
 from BeautifulSoup import BeautifulSoup
 
@@ -29,9 +29,11 @@ class toolkit():
         '''Returns urllib2 with cookies from cybercommons login'''
         return urllib2
     def save(self,commons_name, document,date_keys=[],url=base_url + 'save',collection='data'):
-        param = {'database':commons_name,'data':json.dumps(document,default = handler),'date_keys':json.dumps(date_keys,default = handler)}
+        param = {"database":commons_name,"data":json.dumps(document,default = handler),"date_keys":json.dumps(date_keys,default = handler)}
+        #param = {'database':commons_name,'data':document,'date_keys':date_keys}
         param['collection']=collection
-        result= self.execWS(url,param)
+        result= self.execWS(url,param,True)
+        #return  result
         try:
             if result['status']:
                 return result['_id']
@@ -49,12 +51,20 @@ class toolkit():
         #auth n, r , rw for  None,read, and read/write
         param={'commons_name':commons_name,'auth':auth}
         return self.execWS(url,param)
-    def execWS(self, url, data):
+    def execWS(self, url, data,urlencode=True):
         try:
-            param = urllib.urlencode(data)
-            req = urllib2.Request(url, param)
-            response = urllib2.urlopen(req)
-            result= json.loads(response.read())
-            return result
+            if urlencode:
+                param = urllib.urlencode(data)
+                req = urllib2.Request(url, param)
+                response = urllib2.urlopen(req)
+                result= json.loads(response.read())
+                return result
+            else:
+                headers = {'Content-Type':'application/json'}
+                req = urllib2.Request(url, json.dumps(data,default = handler), headers)
+                req = urllib2.Request(url,data, headers)
+                response = urllib2.urlopen(req)
+                result= json.loads(response.read())
+                return result
         except:
             raise 

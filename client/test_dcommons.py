@@ -32,12 +32,15 @@ print dcommons.createCommons(commons_name)
 print dcommons.setPublic(commons_name,auth='r')
 for doc in records:
     #example to change list of dictionary to single dictionary
+    #print doc
     data = {}
     for d in doc['data']:
         data.update(d)
     doc['data']=data
     #example using date
     doc['input_date'] = datetime.datetime.now()
+    ##print doc
     #save requires commons name, document and a list of date keys
-    dcommons.save(commons_name,doc,["input_date"],collection='Location')
+    #print dcommons.save(commons_name,doc)
+    print dcommons.save(commons_name ,doc,['input_date'])#,collection='Location')
 
