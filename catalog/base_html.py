@@ -92,9 +92,11 @@ class base_html(Template):
 <script type="text/javascript" src="http://static.cybercommons.org/js/jquery-ui-1.8.10.custom.min.js"></script>
 <script type="text/javascript" src="http://static.cybercommons.org/mstacy/jquery.contextMenu.js"></script>
 <script type="text/javascript" src="http://static.cybercommons.org/css/bootstrap/js/bootstrap.min.js"></script>
+<script type="text/javascript" src="http://static.cybercommons.org/pagination/jquery.pagination.js"></script>
 <!--Base CSS-->
 <link type="text/css" href="http://static.cybercommons.org/css/cybercomui/jquery-ui-1.8.13.custom.css" rel="Stylesheet"/>
 <link type="text/css" href="http://static.cybercommons.org/css/bootstrap/css/bootstrap.min.css" rel="Stylesheet"/>
+<link type="text/css" href="http://static.cybercommons.org/pagination/pagination.css" rel="Stylesheet"/>
 <link type="text/css" href="http://static.cybercommons.org/css/bootstrap/css/cybercommons.css" rel="Stylesheet"/>
 <link type="text/css" href="http://static.cybercommons.org/css/cybercom/style.css" rel="Stylesheet"/>
 <!--Custom App JS-CSS-->

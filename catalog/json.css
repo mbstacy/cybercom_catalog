@@ -7,8 +7,8 @@
                         padding: 0px;
                         margin: 0px;
                 }
-                /*.row_even{background:#d9e2e3;}
-                .row_odd{background: #f5f1f2;}*/
+                .row_even{background:#f8f7f2;}
+                .row_odd{background: #e1ded3;}
                 .table{width: 99.4%;}
                 .rounded {
                         -moz-border-radius: 5px;
@@ -97,20 +97,24 @@
                         padding:1px;
                 }
                 div[data-type="object"] {
+                        
                         border: 1px solid #fcc;
-                        padding-bottom: 8px;
+                        padding-bottom: 2px;
                 }
                 div[data-type="array"] {
                         border: 1px solid #ccf;
-                        padding-bottom: 8px;
+                        padding-bottom: 2px;
                 }
                 div[data-role="arrayitem"] > div  {
                         margin: 2px;
                 }
                 [data-type="string"] {
+                        display: inline-block;
                         color: #4AA150;
                 }
                 pre {
+                        background: transparent;
+			padding: 2px;
                         display: inline;
                         margin: 0px;
                         font-family: courier;
@@ -126,15 +130,17 @@
                         color: #FA6B8F;
                 }
                 div[data-role="value"] {
+                        display: block;
                         margin-left: 20px;
                 }
                 div[data-role="prop"], div[data-role="arrayitem"] {
                         //border: 0px solid #ccf;
                         margin: 1px;
-                        padding: 7px;
+                        padding: 2px;
                         color: #4155A6;
                 }
                 span[data-role="key"] {
+			font-weight: bold;
                         min-width:100px;
                 }
                 .edit_box {

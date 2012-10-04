@@ -15,6 +15,9 @@ class mongo_catalog():
         self.dbcon.read_preference = ReadPreference.SECONDARY
         self.dbwrite = Connection(config.get('database','host'))
         self.dbwrite.read_preference = ReadPreference.PRIMARY
+    def check_auth(db,user,api_key=None):
+        if api_key:
+            pass    
     def getdatabase(self,username="guest",multiple=False, **kwargs):
         if multiple:
             priv =[]
