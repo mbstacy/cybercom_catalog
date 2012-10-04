@@ -46,7 +46,7 @@ class Root(object):
         #raise cherrypy.InternalRedirect("data")
         raise cherrypy.HTTPRedirect("/catalog/data/")
     @cherrypy.expose
-    def data(self,db=None,col='data',query={},record=1,page=1,nPerpage=100, **kwargs):
+    def data(self,db=None,col='data',query={},page=1,nPerpage=10, **kwargs):
         fname='data'
         try:
             if cherrypy.request.login:
@@ -93,6 +93,15 @@ class Root(object):
             serial=serialized,FName=fname,prev=prev,next=next,rec_info=info,user=user,serialmeta=serial_meta,seriallocation=serial_location)
         t = Template(file = templatepath + '/data.tmpl', searchList=[nameSpace])
         return t.respond()
+    @cherrypy.expose
+    def ajax_data(self,db=None,col='data',query={},page=1,nPerpage=10, **kwargs):
+        skip=(int(page)-1)*int(nPerpage)
+        limit= int(nPerpage)
+        dump_out=[]
+        cur = self.mongo.getDoc(db,col,query,skip,limit)
+        for item in cur:
+            dump_out.append(item)
+        return json.dumps(dump_out, default = handler, sort_keys=True)
     
     @cherrypy.expose
     def save(self, **kwrgs):
@@ -120,14 +129,20 @@ class Root(object):
                         dkey = ast.literal_eval(doc['date_keys'])
                     else:
                         dkey = []
+                if 'api_key' in doc:
+                    api_key=doc['api_key']
+                else:
+                    api_key=None
                 db = doc['database']
-                if not db in self.mongo.getdatabase(username=user):
-                    return json.dumps({'status':False,'description':'Error: User does not have permission to alter Data Commons '}, default = handler)    
+                if not self.mongo.check_auth(db,user,api_key):#getdatabase(username=user):
+                    return json.dumps({'status':False,'description':'Error: User does not have permission to alter Data Commons '}, default = handler) 
+                #if not db in self.mongo.getdatabase(username=user):
+                #    return json.dumps({'status':False,'description':'Error: User does not have permission to alter Data Commons '}, default = handler)    
                 if 'collection' in doc:
                     col = doc['collection']
                 else:
                     col='data'
-                doc.pop('database')
+                #doc.pop('database')
                 return json.dumps({'status':True,'_id':self.mongo.save(db,col,data,dkey)}, default = handler)
             except Exception as inst:
                 raise inst #return str(inst)
